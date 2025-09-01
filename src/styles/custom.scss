@@ -1,0 +1,11 @@
+// Import only what you need
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+
+// 🔹 Override default Bootstrap variables before main import
+$primary: #0056b3;   // corporate brand blue
+$secondary: #6c757d; // corporate gray
+$font-family-base: 'Roboto', sans-serif;
+
+// Import full Bootstrap after overrides
+@import "bootstrap/scss/bootstrap";

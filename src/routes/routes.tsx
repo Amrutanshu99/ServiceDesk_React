@@ -14,7 +14,7 @@ const isAuthenticated = true;
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<ChatBot />} />
 
       {/* Protected Route */}
       <Route
@@ -22,7 +22,7 @@ const AppRoutes = () => {
         element={isAuthenticated ? <Dashboard /> : <Navigate to="/" />}
       />
 
-      <Route path="/chatBot" element={<ChatBot />} />
+      <Route path="/chat/new" element={<ChatBot />} />
 
       {/* Catch-all route */}
       <Route path="*" element={<NotFound />} />

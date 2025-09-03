@@ -1,13 +1,14 @@
-// src/components/ChatWindow.tsx
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Container, Row, Col, Button, Form, Card } from "react-bootstrap";
-import { 
-  FaUser, 
-  FaRobot, 
-  FaPaperPlane, 
-  FaTimes, 
-  FaCheck, 
+import {
+  FaUser,
+  FaRobot,
+  FaPaperPlane,
+  FaTimes,
+  FaCheck,
   FaRedo,
+  FaMoon,
+  FaSun,
 } from "react-icons/fa";
 const PHASE = {
   ASKING: "ASKING",
@@ -91,23 +92,26 @@ const extractTopic = (message) => {
 // Fake API call function with delay
 const fakeApiCall = async (message, history, signal) => {
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      if (signal?.aborted) {
-        reject(new DOMException("Aborted", "AbortError"));
-        return;
-      }
-      const topic = extractTopic(message);
-      let response;
-      if (FAKE_RESPONSES[topic]) {
-        const responses = FAKE_RESPONSES[topic];
-        response = responses[Math.floor(Math.random() * responses.length)];
-      } else {
-        const responses = FAKE_RESPONSES.default;
-        response = responses[Math.floor(Math.random() * responses.length)];
-        response = response.replace("{topic}", topic);
-      }
-      resolve({ reply: response });
-    }, 1000 + Math.random() * 1000);
+    const timeout = setTimeout(
+      () => {
+        if (signal?.aborted) {
+          reject(new DOMException("Aborted", "AbortError"));
+          return;
+        }
+        const topic = extractTopic(message);
+        let response;
+        if (FAKE_RESPONSES[topic]) {
+          const responses = FAKE_RESPONSES[topic];
+          response = responses[Math.floor(Math.random() * responses.length)];
+        } else {
+          const responses = FAKE_RESPONSES.default;
+          response = responses[Math.floor(Math.random() * responses.length)];
+          response = response.replace("{topic}", topic);
+        }
+        resolve({ reply: response });
+      },
+      1000 + Math.random() * 1000
+    );
 
     // Listen for abort
     if (signal) {
@@ -119,31 +123,41 @@ const fakeApiCall = async (message, history, signal) => {
   });
 };
 
-function Message({ role, content }) {
+// ------------------ Message Bubble ------------------ //
+function Message({ role, content, darkMode }) {
   const isUser = role === "user";
   return (
     <div
       className={`d-flex ${isUser ? "justify-content-end" : "justify-content-start"} mb-3`}
     >
-      <div className="d-flex align-items-start" style={{ maxWidth: "85%" }}>
+      <div className="d-flex align-items-end" style={{ maxWidth: "75%" }}>
         {!isUser && (
-          <div className="me-2 mt-1 flex-shrink-0 bg-primary rounded-circle d-flex align-items-center justify-content-center" 
-               style={{ width: "32px", height: "32px" }}>
+          <div
+            className={`me-2 flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center ${darkMode ? "bg-secondary" : "bg-primary"}`}
+            style={{ width: "32px", height: "32px" }}
+          >
             <FaRobot className="text-white" size={16} />
           </div>
         )}
-        <Card
-          className={`${isUser ? "bg-primary text-white" : "bg-light"} p-3`}
-          style={{ 
-            borderRadius: isUser ? "18px 18px 5px 18px" : "18px 18px 18px 5px",
-            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)"
+        <div
+          className={`px-3 py-2 rounded-3 shadow-sm ${
+            isUser
+              ? "bg-primary text-white"
+              : darkMode
+                ? "bg-dark text-white border border-secondary"
+                : "bg-white border"
+          }`}
+          style={{
+            borderRadius: isUser ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
           }}
         >
-          <Card.Text className="mb-0">{content}</Card.Text>
-        </Card>
+          {content}
+        </div>
         {isUser && (
-          <div className="ms-2 mt-1 flex-shrink-0 bg-secondary rounded-circle d-flex align-items-center justify-content-center" 
-               style={{ width: "32px", height: "32px" }}>
+          <div
+            className={`ms-2 flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center bg-secondary`}
+            style={{ width: "32px", height: "32px" }}
+          >
             <FaUser className="text-white" size={16} />
           </div>
         )}
@@ -152,33 +166,29 @@ function Message({ role, content }) {
   );
 }
 
-function TypingDots() {
+function TypingDots({ darkMode }) {
   return (
-    <div className="d-flex align-items-start mb-3">
-      <div className="me-2 mt-1 flex-shrink-0 bg-primary rounded-circle d-flex align-items-center justify-content-center" 
-           style={{ width: "32px", height: "32px" }}>
+    <div className="d-flex align-items-end mb-3">
+      <div
+        className={`me-2 flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center ${darkMode ? "bg-secondary" : "bg-primary"}`}
+        style={{ width: "32px", height: "32px" }}
+      >
         <FaRobot className="text-white" size={16} />
       </div>
-      <Card className="bg-light p-3" style={{ borderRadius: "18px 18px 18px 5px" }}>
+      <div
+        className={`px-3 py-2 rounded-3 shadow-sm ${darkMode ? "bg-dark text-white border border-secondary" : "bg-white border"}`}
+      >
         <div className="d-flex gap-1">
-          <span
-            className="spinner-grow spinner-grow-sm text-secondary"
-            role="status"
-          ></span>
-          <span
-            className="spinner-grow spinner-grow-sm text-secondary"
-            role="status"
-          ></span>
-          <span
-            className="spinner-grow spinner-grow-sm text-secondary"
-            role="status"
-          ></span>
+          <span className="spinner-grow spinner-grow-sm text-secondary"></span>
+          <span className="spinner-grow spinner-grow-sm text-secondary"></span>
+          <span className="spinner-grow spinner-grow-sm text-secondary"></span>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
 
+// ------------------ Main Chat Window ------------------ //
 export default function ChatWindow({
   title = "Corporate Assistant",
   subtitle = "",
@@ -186,16 +196,17 @@ export default function ChatWindow({
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "Hi 👋 I'm your corporate assistant.Ask me your query.",
+      content: "Hi 👋 I'm your corporate assistant. Ask me your query.",
     },
   ]);
   const [input, setInput] = useState("");
   const [phase, setPhase] = useState(PHASE.ASKING);
   const [loading, setLoading] = useState(false);
   const [awaitingFeedback, setAwaitingFeedback] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const scrollRef = useRef(null);
-  const [controller, setController] = useState(null);
-  
+  const [controller, setController] = useState<AbortController | null>(null);
+
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, phase, loading]);
@@ -209,6 +220,7 @@ export default function ChatWindow({
     return await fakeApiCall(prompt, context, signal);
   }
 
+  // ✅ Fixed handleSend
   async function handleSend() {
     if (!canSend) return;
     const userMsg = { role: "user", content: input.trim() };
@@ -220,18 +232,23 @@ export default function ChatWindow({
     const ctrl = new AbortController();
     setController(ctrl);
     try {
-      const { reply } = await callBackend(userMsg.content, history, ctrl.signal);
+      const { reply } = await callBackend(
+        userMsg.content,
+        history,
+        ctrl.signal
+      );
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
       setPhase(PHASE.GOT_ANSWER);
       setAwaitingFeedback(true);
-    } catch (e) {
+    } catch (e: any) {
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: e.name === "AbortError"
-            ? "Request was cancelled."
-            : "Sorry, I encountered an error. Please try again.",
+          content:
+            e.name === "AbortError"
+              ? "Request was cancelled."
+              : "Sorry, I encountered an error. Please try again.",
         },
       ]);
       setPhase(PHASE.ASKING);
@@ -242,7 +259,7 @@ export default function ChatWindow({
     }
   }
 
-  function onSatisfied(yes) {
+  function onSatisfied(yes: boolean) {
     setAwaitingFeedback(false);
     if (yes) {
       setMessages((prev) => [
@@ -279,8 +296,8 @@ export default function ChatWindow({
     setAwaitingFeedback(false);
   }
 
-  const placeholder = awaitingFeedback 
-    ? "Please provide feedback first..." 
+  const placeholder = awaitingFeedback
+    ? "Please provide feedback first..."
     : phase === PHASE.ASKING
       ? "Type your question…"
       : phase === PHASE.NEED_MORE_INFO
@@ -288,118 +305,137 @@ export default function ChatWindow({
         : "Chat is closed. Start a new question";
 
   return (
-    <Container fluid className="chat-window-container min-vh-100 d-flex flex-column p-0">
-      <Row className="chat-header bg-white border-bottom py-3 sticky-top">
-        <Col className="text-center">
-          <h5 className="mb-0">{title}</h5>
-          <small className="text-muted">{subtitle}</small>
-        </Col>
-      </Row>
-
-      <Container className="flex-grow-1 py-4 px-0">
-        <Row className="justify-content-center mx-0">
-          <Col md={10} lg={8} xl={6} className="px-0">
-            <Card className="chat-card shadow-sm border-0 rounded-0 min-vh-100 d-flex flex-column">
-              <Card.Body
-                className="d-flex flex-column p-0"
-                style={{ height: "calc(100vh - 160px)" }}
+    <Container
+      fluid
+      className={`chat-window d-flex flex-column h-100 p-0 ${darkMode ? "bg-dark text-light" : "bg-light"}`}
+    >
+      <Card
+        className={`flex-grow-1 shadow-lg border-0 rounded-0 d-flex flex-column ${darkMode ? "bg-secondary text-white" : ""}`}
+      >
+        {/* Header */}
+        {/* <Card.Header className={`d-flex justify-content-between align-items-center ${darkMode ? "bg-dark text-light border-secondary" : "bg-white border-bottom"}`}>
+              <div className="text-center flex-grow-1">
+                <h6 className="mb-0 fw-semibold">{title}</h6>
+                {subtitle && <small className="text-muted">{subtitle}</small>}
+              </div>
+              <Button
+                variant={darkMode ? "outline-light" : "outline-dark"}
+                size="sm"
+                className="ms-2 rounded-circle"
+                onClick={() => setDarkMode(!darkMode)}
               >
-                <div className="flex-grow-1 overflow-auto p-4">
-                  {messages.map((m, i) => (
-                    <Message key={i} role={m.role} content={m.content} />
-                  ))}
-                  {loading && <TypingDots />}
-                  <div ref={scrollRef} />
-                </div>
+                {darkMode ? <FaSun /> : <FaMoon />}
+              </Button>
+            </Card.Header> */}
 
-                {phase === PHASE.GOT_ANSWER && (
-                  <div className="feedback-section border-top p-3 bg-light">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="small text-muted">
-                        Was this response helpful?
-                      </span>
-                      <div className="d-flex gap-2">
-                        <Button
-                          variant="success"
-                          size="sm"
-                          className="rounded-circle p-0 d-flex align-items-center justify-content-center feedback-btn"
-                          style={{ width: "32px", height: "32px" }}
-                          onClick={() => onSatisfied(true)}
-                        >
-                          <FaCheck size={12} />
-                        </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          className="rounded-circle p-0 d-flex align-items-center justify-content-center feedback-btn"
-                          style={{ width: "32px", height: "32px" }}
-                          onClick={() => onSatisfied(false)}
-                        >
-                          <FaTimes size={12} />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+        {/* Chat Body with Fixed Input */}
+        <Card.Body
+          className={`d-flex flex-column flex-grow-1 p-0 ${darkMode ? "bg-secondary" : "bg-light"}`}
+        >
+          {/* Messages area (scrollable) */}
+          <div
+            className="flex-grow-1 overflow-auto p-3"
+            style={{ maxHeight: "calc(100vh - 200px)", minHeight: "80vh" }}
+          >
+            {messages.map((m, i) => (
+              <Message
+                key={i}
+                role={m.role}
+                content={m.content}
+                darkMode={darkMode}
+              />
+            ))}
+            {loading && <TypingDots darkMode={darkMode} />}
+            <div ref={scrollRef} />
+          </div>
 
-                <div className="input-section border-top p-3 bg-white">
-                  <Form className="d-flex gap-2 align-items-center">
-                    <Form.Control
-                      type="text"
-                      placeholder={placeholder}
-                      value={input}
-                      disabled={phase === PHASE.RESOLVED || loading || awaitingFeedback}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !awaitingFeedback) {
-                          e.preventDefault();
-                          handleSend();
-                        }
-                      }}
-                      className="py-2 px-3 chat-input"
-                      style={{ borderRadius: "24px" }}
-                    />
-                    {loading && controller ? (
-                      <Button
-                        variant="outline-danger"
-                        className="rounded-circle p-2 d-flex align-items-center justify-content-center send-btn"
-                        style={{ width: "40px", height: "40px" }}
-                        onClick={() => controller.abort()}
-                      >
-                        <FaTimes size={14} />
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="primary"
-                        disabled={!canSend || phase === PHASE.RESOLVED || awaitingFeedback}
-                        onClick={handleSend}
-                        className="rounded-circle p-2 d-flex align-items-center justify-content-center send-btn"
-                        style={{ width: "40px", height: "40px" }}
-                      >
-                        <FaPaperPlane size={14} />
-                      </Button>
-                    )}
-                  </Form>
-                </div>
+          {/* Feedback */}
+          {phase === PHASE.GOT_ANSWER && (
+            <div
+              className={`border-top p-2 text-center small ${darkMode ? "border-secondary text-light" : "text-muted"}`}
+            >
+              <span className="me-2">Was this helpful?</span>
+              <Button
+                size="sm"
+                variant="success"
+                className="rounded-circle me-2"
+                onClick={() => onSatisfied(true)}
+              >
+                <FaCheck size={12} />
+              </Button>
+              <Button
+                size="sm"
+                variant="danger"
+                className="rounded-circle"
+                onClick={() => onSatisfied(false)}
+              >
+                <FaTimes size={12} />
+              </Button>
+            </div>
+          )}
 
-                {phase === PHASE.RESOLVED && (
-                  <div className="text-center p-3 bg-light">
-                    <Button
-                      variant="outline-primary"
-                      onClick={resetForNewQuestion}
-                      className="px-4 new-question-btn"
-                      style={{ borderRadius: "24px" }}
-                    >
-                      <FaRedo className="me-2" />
-                      Start New Question
-                    </Button>
-                  </div>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
+          {/* Input (always fixed at bottom) */}
+          <div
+            className={`border-top p-3 ${darkMode ? "bg-dark" : "bg-white"}`}
+          >
+            <Form className="d-flex align-items-center gap-2">
+              <Form.Control
+                type="text"
+                placeholder={placeholder}
+                value={input}
+                disabled={
+                  phase === PHASE.RESOLVED || loading || awaitingFeedback
+                }
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !awaitingFeedback) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                className={`rounded-pill shadow-sm px-3 py-2 ${darkMode ? "bg-dark text-light border-secondary" : ""}`}
+              />
+              {loading && controller ? (
+                <Button
+                  variant="outline-danger"
+                  className="rounded-circle d-flex align-items-center justify-content-center"
+                  onClick={() => controller.abort()}
+                  style={{ width: "42px", height: "42px" }}
+                >
+                  <FaTimes size={14} />
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  disabled={
+                    !canSend || phase === PHASE.RESOLVED || awaitingFeedback
+                  }
+                  onClick={handleSend}
+                  className="rounded-circle d-flex align-items-center justify-content-center"
+                  style={{ width: "42px", height: "42px" }}
+                >
+                  <FaPaperPlane size={14} />
+                </Button>
+              )}
+            </Form>
+          </div>
+
+          {/* Resolved State */}
+          {phase === PHASE.RESOLVED && (
+            <div
+              className={`border-top text-center p-3 ${darkMode ? "bg-dark" : "bg-light"}`}
+            >
+              <Button
+                variant={darkMode ? "outline-light" : "outline-primary"}
+                onClick={resetForNewQuestion}
+                className="rounded-pill px-4"
+              >
+                <FaRedo className="me-2" /> Start New Question
+              </Button>
+            </div>
+          )}
+        </Card.Body>
+      </Card>
     </Container>
   );
 }
